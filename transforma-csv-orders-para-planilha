@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Processar Planilha</title>
+</head>
+
+<body>
+    <h1>Processar Planilha</h1>
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="processarPlanilha()">Processar</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script>
+        function processarPlanilha() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Selecione um arquivo CSV para processar.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const csvData = event.target.result;
+                const processedData = processCSV(csvData);
+                downloadExcel(processedData);
+            };
+            reader.readAsText(file, 'ISO-8859-1');
+        }
+
+        function processCSV(csvData) {
+            const lines = csvData.split('\n');
+            const header = lines[0].split(';');
+
+            const orderIndex = header.indexOf('Order');
+            const creationDateIndex = header.indexOf('Creation Date');
+            const ufIndex = header.indexOf('UF');
+            const cityIndex = header.indexOf('City');
+            const courrierIndex = header.indexOf('Courrier');
+            const paymentSystemNameIndex = header.indexOf('Payment System Name');
+            const paymentValueIndex = header.indexOf('Payment Value');
+            const quantitySKUIndex = header.indexOf('Quantity_SKU');
+            const skuNameIndex = header.indexOf('SKU Name');
+            const totalValueIndex = header.indexOf('Total Value');
+
+            const processedRows = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const data = lines[i].split(';');
+                if (data.length !== header.length) continue;
+
+                const row = [
+                    data[orderIndex],
+                    data[creationDateIndex],
+                    data[ufIndex],
+                    data[cityIndex],
+                    data[courrierIndex],
+                    data[paymentSystemNameIndex],
+                    parseFloat(data[paymentValueIndex].replace(',', '.')), // Convert to number
+                    parseInt(data[quantitySKUIndex]), // Convert to integer
+                    data[skuNameIndex],
+                    parseFloat(data[totalValueIndex].replace(',', '.')) // Convert to number
+                ];
+
+                processedRows.push(row);
+            }
+
+            return [header, ...processedRows];
+        }
+
+        function downloadExcel(dataArray) {
+            const fileName = getFormattedDate() + '.xlsx';
+            const worksheet = XLSX.utils.aoa_to_sheet(dataArray);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+            XLSX.writeFile(workbook, fileName);
+        }
+
+        function getFormattedDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            return `relatorio-vendas-${day}-${month}-${year}_${hours}:${minutes}:${seconds}`;
+        }
+    </script>
+</body>
+
+</html>
