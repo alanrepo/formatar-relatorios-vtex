@@ -32,7 +32,18 @@
 
         function processCSV(csvData) {
             const lines = csvData.split('\n');
-            const header = lines[0].split(';');
+            const header = [
+                "Order",
+                "Creation Date",
+                "UF",
+                "City",
+                "Courrier",
+                "Payment System Name",
+                "Payment Value",
+                "Quantity_SKU",
+                "SKU Name",
+                "Total Value"
+            ];
 
             const orderIndex = header.indexOf('Order');
             const creationDateIndex = header.indexOf('Creation Date');
@@ -73,6 +84,11 @@
         function downloadExcel(dataArray) {
             const fileName = getFormattedDate() + '.xlsx';
             const worksheet = XLSX.utils.aoa_to_sheet(dataArray);
+
+            // Style the header row
+            const headerRow = worksheet[XLSX.utils.encode_cell({ r: 0, c: 0 })].s;
+            headerRow.font = { bold: true };
+
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
             XLSX.writeFile(workbook, fileName);
